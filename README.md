@@ -5,7 +5,7 @@ ENCRYPTER
 
 DECRYPTER
 
-'''c
+Python
 import os
 import pyaes
 
